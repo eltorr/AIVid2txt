@@ -1,0 +1,14 @@
+[server]
+maxUploadSize = 5000
+enableXsrfProtection = false
+enableCORS = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor="#4cb6dc"
+backgroundColor="#080a12"
+secondaryBackgroundColor="#1a1a29"
+textColor="#cbd3f7"
+
