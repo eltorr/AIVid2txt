@@ -1,123 +1,143 @@
-# Video Transcription App
+# Video Transcription Application
 
-A web application that extracts and transcribes audio from video files using OpenAI's Whisper model. The application features a Streamlit frontend for easy video upload and a FastAPI backend for processing.
+A full-stack application that transcribes video files to text using OpenAI's Whisper model. The application consists of a FastAPI backend and a Streamlit frontend.
 
 ## Features
 
-- Video upload interface with support for files up to 5GB
-- Real-time video playback
-- Audio extraction using FFmpeg
-- Speech-to-text transcription using OpenAI's Whisper
-- Downloadable transcript
+- Upload video files (MP4, AVI, MOV)
+- Real-time video transcription
+- Download transcription results as text files
+- User-friendly web interface
 - Cross-platform support (Windows, macOS, Linux)
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- FFmpeg installed on your system
-  - **Ubuntu/Debian**: `sudo apt-get install ffmpeg`
-  - **macOS**: `brew install ffmpeg`
-  - **Windows**: Download from [FFmpeg official website](https://ffmpeg.org/download.html)
+- FFmpeg
+- Git
+- tmux (for Unix deployment script)
+
+### Installing FFmpeg
+
+- **Ubuntu/Debian**: `sudo apt-get install ffmpeg`
+- **macOS**: `brew install ffmpeg`
+- **Windows**: Download from the [official FFmpeg website](https://ffmpeg.org/download.html)
 
 ## Installation
 
-### Unix-like Systems (Linux/macOS)
-
 1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd video-transcription-app
+   ```
+
+2. Run the setup script for your platform:
+
+   **Unix-based systems (Linux/macOS):**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+   **Windows PowerShell:**
+   ```powershell
+   .\setup.ps1
+   ```
+
+## Running the Application
+
+### Option 1: Using the deployment scripts
+
+**Linux/macOS (using tmux):**
+
+The deployment script uses tmux to manage both services in a single terminal:
+
 ```bash
-git clone <repository-url>
-cd video-transcription-app
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-2. Run the setup script:
-```bash
-chmod +x setup.sh
-./setup.sh
-```
+This will:
+- Create a tmux session with split panes for backend and frontend
+- Start both services automatically
+- Allow you to switch between panes using `Ctrl+B` then arrow keys
+- Allow detaching with `Ctrl+B` then `D`
+- Reattach using `tmux attach -t video-transcription`
 
-3. Start the application:
-```bash
-# Terminal 1 - Start the backend
-./run_backend.sh
-
-# Terminal 2 - Start the frontend
-./run_frontend.sh
-```
-
-### Windows
-
-1. Clone the repository:
+**Windows PowerShell:**
 ```powershell
-git clone <repository-url>
-cd video-transcription-app
+.\deploy.ps1
 ```
 
-2. Run the setup script:
-```powershell
-.\setup.ps1
-```
+This will:
+- Check if required ports (8000 and 8501) are available
+- Start both services in parallel using PowerShell jobs
+- Display real-time output from both services
+- Clean up properly when stopped with Ctrl+C
+- Services will be available at:
+  - Backend: http://localhost:8000
+  - Frontend: http://localhost:8501
 
-3. Start the application:
-```powershell
-# Terminal 1 - Start the backend
-.\run_backend.bat
+### Option 2: Manual startup
 
-# Terminal 2 - Start the frontend
-.\run_frontend.bat
-```
+Start each service in a separate terminal:
 
-## Usage
+1. Start the backend server:
+   ```bash
+   source .venv/bin/activate
+   cd backend
+   uvicorn app:app --reload
+   ```
 
-1. Open your web browser and navigate to `http://localhost:8501`
-2. Upload a video file using the file uploader
-3. The video will be displayed in the browser for preview
-4. Click the "Transcribe Video" button to start the transcription process
-5. Once complete, the transcript will be displayed and available for download
+2. Start the frontend:
+   ```bash
+   source .venv/bin/activate
+   cd frontend
+   streamlit run app.py
+   ```
+
+3. Access the application at `http://localhost:8501`
 
 ## Project Structure
 
 ```
-video-transcription-app/
+.
+├── Linux/                  # Unix/macOS scripts
+│   ├── deploy.sh          # Unix deployment script
+│   └── setup.sh           # Unix setup script
+├── Window/                # Windows scripts
+│   ├── deploy.ps1        # Windows deployment script
+│   └── setup.ps1         # Windows setup script
 ├── backend/
-│   ├── app.py              # FastAPI backend application
-│   └── requirements.txt    # Backend dependencies
+│   └── app.py            # FastAPI backend server
 ├── frontend/
-│   ├── .streamlit/
-│   │   └── config.toml    # Streamlit configuration
-│   ├── app.py             # Streamlit frontend application
-│   └── requirements.txt   # Frontend dependencies
-├── setup.sh               # Unix setup script
-├── setup.ps1              # Windows setup script
-├── run_backend.sh         # Unix backend startup script
-├── run_frontend.sh        # Unix frontend startup script
-├── run_backend.bat        # Windows backend startup script
-├── run_frontend.bat       # Windows frontend startup script
-└── README.md
+│   └── app.py            # Streamlit frontend application
+└── requirements.txt      # Project dependencies
 ```
 
-## Technical Details
+## Configuration
 
-- **Frontend**: Built with Streamlit for a clean and responsive user interface
-- **Backend**: FastAPI for efficient video processing and transcription
-- **Transcription**: Uses OpenAI's Whisper model for accurate speech-to-text conversion
-- **Audio Processing**: FFmpeg for reliable audio extraction from video files
+The application's configuration is managed through:
+- `frontend/.streamlit/config.toml` - Controls Streamlit settings including:
+  - Maximum upload size (5120 MB)
+  - UI theme customization
+  - Usage statistics (disabled by default)
 
-## Limitations
+## Dependencies
 
-- Maximum file size: 5GB (configurable in `.streamlit/config.toml`)
-- Supported video formats: MP4, AVI, MOV
-- Processing time depends on video length and system capabilities
+Key dependencies include:
+- FastAPI - Backend API framework
+- Streamlit - Frontend framework
+- OpenAI Whisper - Speech recognition model
+- FFmpeg - Audio processing
+- uvicorn - ASGI server
+
+For a complete list of dependencies, see `requirements.txt`.
 
 ## Troubleshooting
 
 1. **FFmpeg not found**: Ensure FFmpeg is installed and accessible from the command line
 2. **Port conflicts**: Make sure ports 8000 (backend) and 8501 (frontend) are available
-3. **Memory issues**: For large videos, you may need to increase your system's swap space
+3. **Virtual environment issues**: Delete the `.venv` directory and run the setup script again
+4. **tmux not found**: Install tmux using your system's package manager (for Unix deployment)
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

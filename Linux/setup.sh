@@ -7,24 +7,22 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}Setting up Video Transcription Application...${NC}"
 
+# Get the root directory (parent of Linux folder)
+ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+cd "$ROOT_DIR"
+
 # Create and setup backend environment
 echo -e "${GREEN}Setting up backend environment...${NC}"
-python -m venv backend/venv
-source backend/venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install --upgrade pip
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 deactivate
 
 # Create and setup frontend environment
 echo -e "${GREEN}Setting up frontend environment...${NC}"
-python -m venv frontend/venv
-source frontend/venv/bin/activate
-pip install --upgrade pip
-pip install -r frontend/requirements.txt
+pip install -r requirements.txt
 deactivate
-
-# Create run scripts for both services
-echo -e "${GREEN}Creating run scripts...${NC}"
 
 # Create .streamlit directory and config
 echo -e "${GREEN}Creating Streamlit config...${NC}"
@@ -43,29 +41,9 @@ secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 EOF
 
-# Backend run script
-cat > run_backend.sh << 'EOF'
-#!/bin/bash
-source backend/venv/bin/activate
-cd backend
-uvicorn app:app --reload
-EOF
-
-# Frontend run script
-cat > run_frontend.sh << 'EOF'
-#!/bin/bash
-source frontend/venv/bin/activate
-cd frontend
-streamlit run app.py
-EOF
-
-# Make run scripts executable
-chmod +x run_backend.sh run_frontend.sh
-
 echo -e "${BLUE}Setup complete!${NC}"
 echo -e "${GREEN}To start the application:${NC}"
-echo "1. Run the backend: ./run_backend.sh"
-echo "2. In a new terminal, run the frontend: ./run_frontend.sh"
+echo "Run the deployment script: ./Linux/deploy.sh"
 
 # Check if ffmpeg is installed
 if ! command -v ffmpeg &> /dev/null; then
