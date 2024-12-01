@@ -11,18 +11,46 @@ echo -e "${BLUE}Setting up Video Transcription Application...${NC}"
 ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
 cd "$ROOT_DIR"
 
-# Create and setup backend environment
-echo -e "${GREEN}Setting up backend environment...${NC}"
+# Check for required dependencies
+echo -e "${GREEN}Checking dependencies...${NC}"
+
+# Check if ffmpeg is installed
+if ! command -v ffmpeg &> /dev/null; then
+    echo -e "\n${BLUE}FFmpeg is required but not installed.${NC}"
+    echo "Installing ffmpeg..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        brew install ffmpeg
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo apt-get update && sudo apt-get install -y ffmpeg
+    else
+        echo "Please install ffmpeg manually from: https://ffmpeg.org/download.html"
+        exit 1
+    fi
+fi
+
+# Check if tmux is installed
+if ! command -v tmux &> /dev/null; then
+    echo -e "\n${BLUE}tmux is required but not installed.${NC}"
+    echo "Installing tmux..."
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        brew install tmux
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo apt-get update && sudo apt-get install -y tmux
+    else
+        echo "Please install tmux manually"
+        exit 1
+    fi
+fi
+
+# Create virtual environment
+echo -e "${GREEN}Creating virtual environment...${NC}"
 python3 -m venv .venv
+
+# Install dependencies
+echo -e "${GREEN}Installing dependencies...${NC}"
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-deactivate
-
-# Create and setup frontend environment
-echo -e "${GREEN}Setting up frontend environment...${NC}"
-pip install -r requirements.txt
-deactivate
 
 # Create .streamlit directory and config
 echo -e "${GREEN}Creating Streamlit config...${NC}"
@@ -41,15 +69,30 @@ secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 EOF
 
-echo -e "${BLUE}Setup complete!${NC}"
-echo -e "${GREEN}To start the application:${NC}"
-echo "Run the deployment script: ./Linux/deploy.sh"
+echo -e "${BLUE}Setup complete! Starting the application...${NC}"
 
-# Check if ffmpeg is installed
-if ! command -v ffmpeg &> /dev/null; then
-    echo -e "\n${BLUE}Note: ffmpeg is required but not installed.${NC}"
-    echo "To install ffmpeg:"
-    echo "- On Ubuntu/Debian: sudo apt-get install ffmpeg"
-    echo "- On MacOS: brew install ffmpeg"
-    echo "- On Windows: Please download from the official ffmpeg website"
-fi 
+# Start backend
+cd "${ROOT_DIR}/backend"
+source "${ROOT_DIR}/.venv/bin/activate"
+uvicorn app:app --reload > backend.log 2>&1 & 
+BACKEND_PID=$!
+
+# Start frontend
+cd "${ROOT_DIR}/frontend"
+streamlit run app.py > frontend.log 2>&1 &
+FRONTEND_PID=$!
+
+# Save PIDs to a file for later cleanup
+echo $BACKEND_PID > "${ROOT_DIR}/.backend_pid"
+echo $FRONTEND_PID > "${ROOT_DIR}/.frontend_pid"
+
+# Display information
+echo -e "\n${GREEN}Application is running!${NC}"
+echo -e "Backend server running at: ${BLUE}http://localhost:8000${NC}"
+echo -e "Frontend available at: ${BLUE}http://localhost:8501${NC}"
+echo -e "\nTo view logs:"
+echo "  Backend: tail -f backend.log"
+echo "  Frontend: tail -f frontend.log"
+echo -e "\n${GREEN}To stop the application:${NC}"
+echo "  kill $BACKEND_PID $FRONTEND_PID"
+echo "  or run: pkill -f 'uvicorn|streamlit'" 
